@@ -117,12 +117,11 @@ namespace stats {
 
         std::vector<double> mleGeneric(
             const std::function<double(const std::vector<double>&)>& logLikelihood,
-            const std::vector<double>& data,
+            const std::vector<double>& /* data */,
             const std::vector<double>& initial_guesses,
             const double& tolerance,
             const int& max_iterations
         ){
-
             auto current_guesses = initial_guesses;
             auto current_log_likelihood = logLikelihood(current_guesses);
 
@@ -130,26 +129,26 @@ namespace stats {
                 auto next_guesses = current_guesses;
                 auto next_log_likelihood = current_log_likelihood;
 
-                for (int j = 0; j < current_guesses.size(); j++){
+                for (size_t j = 0; j < current_guesses.size(); j++){
                     auto current_guess = current_guesses[j];
                     auto current_guess_log_likelihood = logLikelihood(current_guesses);
 
-                    auto new_guess = current_guess + 1.0;
-                    auto new_guess_log_likelihood = logLikelihood(new_guess);
+                    auto new_guesses = current_guesses;
+                    new_guesses[j] = current_guess + 1.0;
+                    auto new_guess_log_likelihood = logLikelihood(new_guesses);
 
                     if (new_guess_log_likelihood > current_guess_log_likelihood){
-                        next_guesses[j] = new_guess;
+                        next_guesses = new_guesses;
                         next_log_likelihood = new_guess_log_likelihood;
                     }
 
-                    new_guess = current_guess - 1.0;
-                    new_guess_log_likelihood = logLikelihood(new_guess);
+                    new_guesses[j] = current_guess - 1.0;
+                    new_guess_log_likelihood = logLikelihood(new_guesses);
 
                     if (new_guess_log_likelihood > current_guess_log_likelihood){
-                        next_guesses[j] = new_guess;
+                        next_guesses = new_guesses;
                         next_log_likelihood = new_guess_log_likelihood;
                     }
-
                 }
 
                 if (std::abs(next_log_likelihood - current_log_likelihood) < tolerance){
@@ -161,9 +160,6 @@ namespace stats {
             }
 
             throw std::runtime_error("Maximum iterations reached without convergence");
-
-
-
         }
 
 

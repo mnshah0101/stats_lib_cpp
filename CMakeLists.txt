@@ -37,7 +37,7 @@ include(GNUInstallDirs)
 
 # Install the library
 install(TARGETS stats_lib
-    EXPORT stats_lib-targets
+    EXPORT stats_libTargets
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
@@ -50,8 +50,8 @@ install(DIRECTORY include/
 )
 
 # Export the targets
-install(EXPORT stats_lib-targets
-    FILE stats_lib-targets.cmake
+install(EXPORT stats_libTargets
+    FILE stats_libTargets.cmake
     NAMESPACE stats_lib::
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/stats_lib
 )
@@ -85,7 +85,7 @@ if(BUILD_EXAMPLES)
 endif()
 
 # Add option to build tests
-option(BUILD_TESTS "Build test programs" OFF)
+option(BUILD_TESTS "Build test programs" ON)
 if(BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)

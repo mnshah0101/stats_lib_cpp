@@ -21,7 +21,9 @@ namespace stats {
          * @param b Second parameter
          * @return Value of the beta function
          */
-        constexpr double _beta(double a, double b);
+        constexpr double _beta(double a, double b) {
+            return std::tgamma(a) * std::tgamma(b) / std::tgamma(a + b);
+        }
 
         /**
          * @brief Calculate binomial coefficient (n choose k)
@@ -38,7 +40,7 @@ namespace stats {
          * @param sigma Standard deviation parameter
          * @return PDF value
          */
-        constexpr double normal_pdf(double x, double mu, double sigma);
+        double normal_pdf(double x, double mu, double sigma);
 
         /**
          * @brief Calculate normal cumulative distribution function
@@ -47,7 +49,12 @@ namespace stats {
          * @param sigma Standard deviation parameter
          * @return CDF value
          */
-        constexpr double normal_cdf(double x, double mu, double sigma);
+        constexpr double normal_cdf(double x, double mu, double sigma) {
+            const auto MLE = -1.65451;
+            auto z = (x - mu) / sigma;
+            auto p_cum = 1.0 / (1 + std::exp(MLE * z));
+            return p_cum;
+        }
 
         /**
          * @brief Calculate Poisson probability mass function
@@ -55,7 +62,9 @@ namespace stats {
          * @param x Value to evaluate
          * @return PMF value
          */
-        constexpr double poisson_pdf(double lambda, int x);
+        constexpr double poisson_pdf(double lambda, int x) {
+            return std::exp(-1*lambda) * (std::pow(lambda, x) / factorial(x));
+        }
 
         /**
          * @brief Calculate Poisson cumulative distribution function
@@ -63,7 +72,17 @@ namespace stats {
          * @param x Value to evaluate
          * @return CDF value
          */
-        constexpr double poisson_cdf(double lambda, int x);
+        constexpr double poisson_cdf(double lambda, int x) {
+            if (x < 0) {
+                throw std::runtime_error("X must be greater than or equal to 0");
+            }
+            double total = 0.0;
+            for (int i = 0; i <= x; i++) {
+                total += std::pow(lambda, i) / factorial(i);
+            }
+            total *= std::exp(lambda * -1);
+            return total;
+        }
 
         /**
          * @brief Calculate exponential probability density function
@@ -71,7 +90,9 @@ namespace stats {
          * @param x Value to evaluate
          * @return PDF value
          */
-        constexpr double exponential_pdf(double beta, double x);
+        constexpr double exponential_pdf(double beta, double x) {
+            return (1/beta) * std::exp(-1*x / beta);
+        }
 
         /**
          * @brief Calculate exponential cumulative distribution function
@@ -79,7 +100,9 @@ namespace stats {
          * @param x Value to evaluate
          * @return CDF value
          */
-        constexpr double exponential_cdf(double beta, double x);
+        constexpr double exponential_cdf(double beta, double x) {
+            return 1 - std::exp(-1 * x / beta);
+        }
 
         /**
          * @brief Calculate beta probability density function
@@ -88,7 +111,9 @@ namespace stats {
          * @param x Value to evaluate
          * @return PDF value
          */
-        constexpr double beta_pdf(double alpha, double beta, double x);
+        constexpr double beta_pdf(double alpha, double beta, double x) {
+            return (1 / _beta(alpha, beta)) * std::pow(x, alpha - 1) * std::pow(1-x, beta - 1);
+        }
 
         /**
          * @brief Calculate gamma probability density function
@@ -97,7 +122,9 @@ namespace stats {
          * @param x Value to evaluate
          * @return PDF value
          */
-        constexpr double gamma_pdf(double alpha, double beta, double x);
+        constexpr double gamma_pdf(double alpha, double beta, double x) {
+            return (std::pow(beta, alpha) / std::tgamma(alpha)) * std::pow(x, alpha - 1) * std::exp(-1 * beta * x);
+        }
 
         /**
          * @brief Calculate beta cumulative distribution function
@@ -126,6 +153,17 @@ namespace stats {
          * @param x Number of successes
          * @return PMF value
          */
-        constexpr double binomialpdf(double p, int n, int x);
+        constexpr double binomialpdf(double p, int n, int x) {
+            if(p > 1 || p < 0) {
+                throw std::runtime_error("p has to be between 0 and 1");
+            }
+            if (x < 0 || n < 0) {
+                throw std::runtime_error("X and n must be greater than or equal to 0");
+            }
+            if (x > n) {
+                throw std::runtime_error("X must be less than or equal to N");
+            }
+            return nChoosek(n,x) * std::pow(p,x) * std::pow(1-p, n-x);
+        }
     }
 }
