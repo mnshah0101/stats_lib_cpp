@@ -1,10 +1,9 @@
 #define __STDCPP_WANT_MATH_SPEC_FUNCS__ 1
-
 #define _USE_MATH_DEFINES
 
+#include "stats_lib/stats_lib/distribution.hpp"
 #include <iostream>
 #include <iomanip>
-
 #include <cmath>
 
 namespace stats
@@ -145,15 +144,4 @@ namespace stats
         }
     }
 
-}
-
-    
-
-
-
-int main() {
-    double a = 10, b = 5.0;
-    std::cout << "B(" << a << "," << b << ") = "
-              << stats::distributions::beta_cdf(a, b, 0.5) // Normalization constant B(α,β)
-              << "\n";
 }

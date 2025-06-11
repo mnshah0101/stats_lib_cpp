@@ -1,114 +1,94 @@
 #define _USE_MATH_DEFINES
 
+#include "stats_lib/stats_lib/rng.hpp"
 #include <random>
 #include <iostream>
 #include <ctime>
 #include <exception>
-
+#include <stdexcept>
 
 namespace stats {
-    class RNG {
-        private:
-        std::mt19937 rng;
+    RNG::RNG(unsigned seed) {
+        mt = std::mt19937(seed);
+    }
 
-        public:
-        RNG() {
-            rng = std::mt19937(std::time(0));
+    double RNG::uniformReal() {
+        return mt() / (double)(std::mt19937::max());
+    }
 
-        }
-
-        double uniform(double a, double b){
+    double RNG::uniformReal(double a, double b) {
             if (a > b){
                 throw std::runtime_error("A must be less than b");
             }
-            auto normal = rng() / (double)(std::mt19937::max());
-
-            
-
-
-
-
-            return normal * (b-a) + a;
-            
-        }
-
-        int uniform_int(int a, int b){
-            return (int)uniform(a,b);
-        }
-        
-
-        double bernoulli(double p){
-            auto val = uniform(0,1);
-            return val < p;
-
-
-        }
-
-        double normal(double mu, double sigma){
-            auto u1 = uniform(0,1);
-            auto u2 = uniform(0, 1);
-
-            return std::sqrt(-2*std::log(u1)) * std::cos(2 * M_PI * u2);
-
-        };
-
-
-        double exponential(double lambda){
-            auto u = uniform(0,1);
-            return -1 * std::log(1-u) / lambda;
-        }
-
-        int bernouli(int n, double p){
-
-            int total = 0;
-
-            for(int i = 0; i < n; i++){
-                total +=  uniform(0,1) < p;
-
-            };
-
-            return total;
-        };
-
-        int poisson(double lambda){
-            //since poisson represents the number of events that occur if we wait for lambda minutes, then if we get a bunch of exponential - times between events are independent exponentials
-
-            double total = 0;
-
-            int return_val = 0;
-
-
-            while (total < lambda){
-                total += exponential(lambda);
-                if(total >= lambda){
-                    return return_val;
-                }
-                return_val += 1;
-            }
-
-
-
-            
-        }
-
-        
-
-    
-    };
-
-
-}
-
-
-
-
-
-int main(){
-
-    auto rng = stats::RNG();
-    for(int i = 0; i < 100; i++){
-        std::cout << rng.poisson(0.5) << '\n';
+        return uniformReal() * (b-a) + a;
     }
 
-    return 0;
+    int RNG::uniformInt(int a, int b) {
+        return (int)uniformReal(a, b+1);
+    }
+
+    bool RNG::bernoulli(double p) {
+        if (p < 0 || p > 1) {
+            throw std::runtime_error("Probability must be between 0 and 1");
+        }
+        return uniformReal() < p;
+    }
+
+    double RNG::normal(double mu, double sigma) {
+        // Box-Muller transform
+        auto u1 = uniformReal();
+        auto u2 = uniformReal();
+        auto z = std::sqrt(-2.0 * std::log(u1)) * std::cos(2.0 * M_PI * u2);
+        return mu + sigma * z;
+    }
+
+    double RNG::exponential(double lambda) {
+        if (lambda <= 0) {
+            throw std::runtime_error("Lambda must be positive");
+        }
+        auto u = uniformReal();
+        return -std::log(1.0 - u) / lambda;
+    }
+
+    int RNG::binomial(int n, double p) {
+
+        if (p < 0 || p > 1) {
+            throw std::runtime_error("Probability must be between 0 and 1");
+        }
+        if (n < 0) {
+            throw std::runtime_error("Number of trials must be non-negative");
+        }
+
+        int total = 0;
+        for (int i = 0; i < n; i++) {
+            total += bernoulli(p);
+        }
+        return total;
+    }
+
+    int RNG::poisson(double lambda) {
+        if (lambda <= 0) {
+            throw std::runtime_error("Lambda must be positive");
+        }
+
+        // Direct method for small lambda
+        if (lambda < 30) {
+            double L = std::exp(-lambda);
+            double p = 1.0;
+            int k = 0;
+            
+            do {
+                k++;
+                p *= uniformReal();
+            } while (p > L);
+            
+            return k - 1;
+        } else {
+            // For larger lambda, use normal approximation
+            double u1 = uniformReal();
+            double u2 = uniformReal();
+            double z = std::sqrt(-2.0 * std::log(u1)) * std::cos(2.0 * M_PI * u2);
+            return static_cast<int>(std::max(0.0, std::round(lambda + std::sqrt(lambda) * z)));
+        }
+    }
 }
